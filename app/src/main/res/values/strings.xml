@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Employer Reports Viewer</string>
+    <string name="settings">Settings</string>
+    <string name="reports">Reports</string>
+    <string name="supabase_url">Supabase URL</string>
+    <string name="supabase_anon_key">Anon Key</string>
+    <string name="save_config">Save Configuration</string>
+    <string name="test_connection">Test Connection</string>
+    <string name="no_records">No attendance records found</string>
+    <string name="loading">Loading...</string>
+    <string name="error">Error</string>
+    <string name="retry">Retry</string>
+    <string name="punch_in">Punch In</string>
+    <string name="punch_out">Punch Out</string>
+    <string name="all_employees">All Employees</string>
+    <string name="today">Today</string>
+    <string name="this_week">This Week</string>
+    <string name="this_month">This Month</string>
+    <string name="configure_supabase">Please configure Supabase in Settings</string>
+</resources>

@@ -1,0 +1,26 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.pragament.employerreportsviewer.app-mergeDebugResources-54:/values-night-v8/values-night-v8.xml",
+            "map": [
+                {
+                    "source": "D:\\Inter(Pragament)\\EmployerReportsViewer\\app\\src\\main\\res\\values-night\\themes.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "57",
+                        "endColumns": "92",
+                        "endOffsets": "145"
+                    },
+                    "to": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "91",
+                        "endOffsets": "142"
+                    }
+                }
+            ]
+        }
+    ]
+}
