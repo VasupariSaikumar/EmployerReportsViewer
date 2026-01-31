@@ -10,6 +10,7 @@ data class SupabaseAttendanceRecord(
     @SerialName("punch_in_time") val punchInTime: String? = null,
     @SerialName("punch_out_time") val punchOutTime: String? = null,
     @SerialName("image_url") val imageUrl: String? = null,
+    @SerialName("punch_out_image_url") val punchOutImageUrl: String? = null,
     @SerialName("is_synced") val isSynced: Boolean = true,
     @SerialName("created_at") val createdAt: String? = null
 )

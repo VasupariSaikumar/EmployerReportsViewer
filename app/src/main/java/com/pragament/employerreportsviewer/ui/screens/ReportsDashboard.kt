@@ -2,11 +2,14 @@ package com.pragament.employerreportsviewer.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -37,6 +40,7 @@ fun ReportsDashboard(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     var showEmployeeDropdown by remember { mutableStateOf(false) }
+    var selectedRecord by remember { mutableStateOf<SupabaseAttendanceRecord?>(null) }
     
     // Show error toast
     LaunchedEffect(uiState.errorMessage) {
@@ -279,12 +283,176 @@ fun ReportsDashboard(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(uiState.filteredRecords) { record ->
-                            AttendanceRecordCard(record = record)
+                            AttendanceRecordCard(
+                                record = record,
+                                onClick = {
+                                    selectedRecord = record
+                                }
+                            )
                         }
+                    }
+                }
+
+                if (selectedRecord != null) {
+                    android.util.Log.d("ReportsDashboard", "Opening dialog for record: ${selectedRecord!!.id}. PunchOutImg: ${selectedRecord!!.punchOutImageUrl}")
+                    AttendanceDetailsDialog(
+                        record = selectedRecord!!,
+                        onDismiss = { selectedRecord = null }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AttendanceDetailsDialog(
+    record: SupabaseAttendanceRecord,
+    onDismiss: () -> Unit
+) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 700.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Attendance Details",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.Close, contentDescription = "Close")
+                    }
+                }
+                
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                
+                Column(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // PUNCH IN SECTION
+                    SectionHeader(title = "Punch In", time = record.punchInTime)
+                    
+                    if (record.imageUrl != null) {
+                        AttendanceImage(
+                            model = record.imageUrl,
+                            label = "Punch In Selfie"
+                        )
+                    } else {
+                         StatusMessage(text = "No punch in image available", isError = true)
+                    }
+                    
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    
+                    // PUNCH OUT SECTION
+                    SectionHeader(title = "Punch Out", time = record.punchOutTime ?: "Pending")
+                    
+                    if (record.punchOutImageUrl != null) {
+                        AttendanceImage(
+                            model = record.punchOutImageUrl,
+                            label = "Punch Out Selfie"
+                        )
+                    } else {
+                        // Logic: If punchOutTime is null -> Still Working. Else -> No image.
+                        if (record.punchOutTime == null) {
+                             StatusMessage(
+                                 text = "User is still working", 
+                                 icon = Icons.Default.Timer, 
+                                 color = WorkingColor
+                             )
+                        } else {
+                             StatusMessage(text = "No punch out image available", isError = true)
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                   modifier = Modifier.fillMaxWidth(),
+                   horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Close")
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun SectionHeader(title: String, time: String?) {
+    Column {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        time?.let {
+            Text(
+                text = formatTime(it) + " - " + formatDate(it),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+fun AttendanceImage(model: Any, label: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp),
+        shape = RoundedCornerShape(8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+         coil.compose.AsyncImage(
+            model = model,
+            contentDescription = label,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+        )
+    }
+}
+
+@Composable
+fun StatusMessage(
+    text: String, 
+    icon: androidx.compose.ui.graphics.vector.ImageVector = Icons.Default.Info,
+    isError: Boolean = false,
+    color: Color = if(isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(color.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Icon(icon, contentDescription = null, tint = color)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = text, color = color, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -333,7 +501,10 @@ fun StatCard(
 }
 
 @Composable
-fun AttendanceRecordCard(record: SupabaseAttendanceRecord) {
+fun AttendanceRecordCard(
+    record: SupabaseAttendanceRecord,
+    onClick: () -> Unit
+) {
     val hasCheckedOut = record.punchOutTime != null
     val statusColor = if (hasCheckedOut) PunchOutColor else PunchInColor
     val statusText = if (hasCheckedOut) "Checked Out" else "Working"
@@ -358,7 +529,9 @@ fun AttendanceRecordCard(record: SupabaseAttendanceRecord) {
     val dateFormatted = record.punchInTime?.let { formatDate(it) } ?: ""
     
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
