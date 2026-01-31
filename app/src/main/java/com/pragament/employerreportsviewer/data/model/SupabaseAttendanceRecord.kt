@@ -3,10 +3,6 @@ package com.pragament.employerreportsviewer.data.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/**
- * Data class matching the Supabase 'attendance' table structure.
- * Used for fetching attendance records from Supabase.
- */
 @Serializable
 data class SupabaseAttendanceRecord(
     val id: Long? = null,
